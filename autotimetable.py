@@ -100,7 +100,7 @@ def parse_texttime_to_datetime(time_str, end_of_day):
         time = time_parser.parse(time_str)
         if end_of_day:
             if time.hour == 0 and time.minute == 0:
-                time += datetime.timedelta(hours = 23, minutes = 59, seconds = 59)
+                time += datetime.timedelta(hours = 23, minutes = 59, seconds = 0)
         return time
     except ValueError:
         return None
@@ -113,7 +113,8 @@ def check_event_ended(event_start, event_end):
     import datetime
     time_now = datetime.datetime.utcnow()
     event_end = event_end - datetime.timedelta(hours = 8)
-    if event_end < time_now:
+    event_end += datetime.timedelta(hours = 0, minutes = 1, seconds = 0)
+    if event_end <= time_now:
         return True
     else:
         return False
@@ -211,7 +212,7 @@ def main():
         loop_cnt = loop_cnt + 1
 
 
-# In[ ]:
+# In[10]:
 
 
 if __name__ == "__main__":
