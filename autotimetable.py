@@ -14,13 +14,15 @@ lgpassword = os.environ['lgpassword']
 
 def wiki_login(session):
     url = "https://tos.fandom.com/zh/api.php"
+    
     params_login = {
-        "action": "login",
-        "lgname": lgname,
+        "action": "query",
+        "meta" : "tokens",
+        "type" : "login", 
         "format": "json"
     }
     r = session.post(url, data=params_login)
-    lgtoken = r.json()['login']['token']
+    lgtoken = r.json()['query']['tokens']['logintoken']
 
     params_login = {
         "action": "login",
@@ -38,17 +40,15 @@ def wiki_login(session):
 
 def wiki_edit(session, new_text):  
     url = "https://tos.fandom.com/zh/api.php"
+    
     params_edittoken = {
         "action": "query",
-        "prop": "info",
-        "intoken": "edit",
-        "titles": "Template:CurrentEvents2",
+        "meta" : "tokens",
         "format": "json"
     }
     r = session.post(url, data=params_edittoken)
-    r.json()
-    pageid = list(r.json()['query']['pages'].keys())[0]
-    edittoken = r.json()['query']['pages'][pageid]['edittoken']
+    edittoken = r.json()['query']['tokens']['csrftoken']
+        
     params_edit = {
         "action": "edit",
         "title": "Template:CurrentEvents2",
@@ -64,19 +64,20 @@ def wiki_edit(session, new_text):
 # In[ ]:
 
 
-def clean_html(raw_html):
-    import re
-    cleanr = re.compile('<.*?>')
-    cleantext = re.sub(cleanr, '', raw_html)
-    return cleantext
-
 def get_timetable_text(session):
-    from requests import Session
-    from bs4 import BeautifulSoup as bs
-    CurrentEvents = session.get("https://tos.fandom.com/zh/wiki/Template:CurrentEvents?action=edit")
-    CurrentEventsOriginalText = bs(CurrentEvents.content, "html.parser")
-    CurrentEventsOriginalText = CurrentEventsOriginalText.find("div", {"id": "editarea"}).find("textarea")
-    return clean_html(CurrentEventsOriginalText.text)
+    url = "https://tos.fandom.com/zh/api.php"
+    params_querypage = {
+        "action": "query",
+        "prop": "revisions",
+        "titles": "Template:CurrentEvents",
+        "rvslots" : "main",
+        "rvprop": "content",
+        "format": "json"
+    }
+    r = session.post(url, data=params_querypage)
+    page = list(r.json()['query']['pages'].values())[0]
+    event = page['revisions'][0]['slots']['main']['*']
+    return event
 
 def get_timetable_text_cur(session):
     import re
@@ -212,7 +213,7 @@ def main():
         loop_cnt = loop_cnt + 1
 
 
-# In[10]:
+# In[ ]:
 
 
 if __name__ == "__main__":
